@@ -1,15 +1,12 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
+#include        <stdio.h>
 const int SENTINEL = 999;
-using namespace std;
 int functionOne(int i);
 int main(int argc, char *argv[])
 {
 int value = 5;
 if (0 == 0)
 {
-cout << "If statement" << endl;	 
+printf("If statement");
 }
 functionOne(
 value
@@ -21,10 +18,9 @@ functionOne(
 int i
 )
 {
-cout 
-<<
+printf 
+(
 "Function One"
-<<
-endl;
+);
 return 1;
 }

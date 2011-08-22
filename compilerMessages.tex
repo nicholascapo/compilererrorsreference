@@ -5,7 +5,7 @@
 \usepackage{listings}
 
 \author{generateCompilerMessages.py}
-\title{Compiler Output Messages for g++ -Wall}
+\title{Iterative Line Removal: Compiler Output Messages using g++ -Wall}
 
 \begin{document}
 \maketitle
@@ -118,7 +118,7 @@ No Warnings or Errors
 
 
 
-\section{\} // End if [Line 13]}
+\section{\} [Line 13]}
 \begin{verbatim}
 tempfile.cpp: In function ‘int main(int, char**)’:
 tempfile.cpp:43: error: a function-definition is not allowed here before ‘{’ token
@@ -163,7 +163,7 @@ No Warnings or Errors
 
 
 
-\section{\} // End main [Line 18]}
+\section{\} [Line 18]}
 \begin{verbatim}
 tempfile.cpp: In function ‘int main(int, char**)’:
 tempfile.cpp:43: error: a function-definition is not allowed here before ‘{’ token
@@ -191,7 +191,7 @@ tempfile.cpp:41: error: expected initializer before ‘)’ token
 
 \section{int i [Line 21]}
 \begin{verbatim}
-/tmp/ccYbxo26.o: In function `main':
+/tmp/ccBLC08e.o: In function `main':
 tempfile.cpp:(.text+0x3d): undefined reference to `functionOne(int)'
 collect2: ld returned 1 exit status
 
