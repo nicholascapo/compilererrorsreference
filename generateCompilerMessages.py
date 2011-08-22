@@ -120,7 +120,7 @@ def latex_header():
 \\usepackage{listings}
 
 \\author{generateCompilerMessages.py}
-\\title{Compiler Output Messages for %s}
+\\title{Iterative Line Removal: Compiler Output Messages using %s}
 
 \\begin{document}
 \\maketitle
