@@ -22,7 +22,7 @@
 # 
 
 # TODO 
-# add ArgParse support
+# Use tempfile for compiling
 # 
 
 
@@ -34,39 +34,20 @@ import argparse
 
 ###############################################
 ###############################################
-## USER CONFIGURATION OPTIONS
-
-# compiler command to use, source code filename will be appended
-compiler = 'g++ -Wall'
-
-# the language is use (This needs to correspond to a language supported by the LaTeX listings package)
-lang = 'C++'
-
-# filename extension used for temporary source files
-source_filename_extension = '.cpp'
-
-# whether the output should be in LaTeX or plain text (True / False)
-#output_plain = True
-###############################################
-###############################################
-
-
-###############################################
 def main():
 	options = parse_arguments()
-	output_plain = options['plaintext']
 	
-	source_lines = get_lines(sys.argv[1])
+	source_lines = get_lines(options.source_filename)
 	
-	check_no_error_compile()
+	check_no_error_compile(options.compiler, options.source_filename)
 	
-	if output_plain:
-		processor = plaintext_processor()
+	if options.plaintext:
+		processor = plaintext_processor(compiler=options.compiler, language=options.lang, extension=options.extension)
 	else:
-		processor = latex_processor()
+		processor = latex_processor(compiler=options.compiler, language=options.lang, extension=options.extension)
 	
 	processor.header()
-	processor.include_file(source_lines, sys.argv[1])
+	processor.include_file(source_lines, options.source_filename)
 	for i in range(0, len(source_lines)):
 		if source_lines[i] == '\n':
 			continue
@@ -76,13 +57,22 @@ def main():
 
 ###############################################
 def parse_arguments():
-	parser = argparse.ArgumentParser(description='Generate Compiler Error Messages, in plaintext or LaTeX')
-	parser.add_argument('-p', '--plain', help='Output plaintext (LaTeX is the default)', action='store_true', default=false, dest=plaintext)
+	parser = argparse.ArgumentParser(description='Generate Compiler Error Messages, in plaintext or LaTeX. The default options are: C++, g++ -Wall, .cpp, and LaTeX output')
+	parser.add_argument('-l', '--lang', help='The language is use (This needs to correspond to a language supported by the LaTeX listings package)', default='C++')
+	parser.add_argument('-c', '--compiler', help='Compiler to Use', default='g++ -Wall')
+	parser.add_argument('-e', '--extension', help='Filename extension used for temporary source code files', default='.cpp')
+	parser.add_argument('-p', '--plain', help='Output plaintext', action='store_true', dest='plaintext', default=False)
+
+	parser.add_argument('source_filename', help='Source Code File for Analysis')
+	# add arg for source files
+	
+	res = parser.parse_args()
+	return res
 	
 
 ###############################################
-def check_no_error_compile():
-	cmd = compiler + ' ' + sys.argv[1]
+def check_no_error_compile(compiler, sourcefilename):
+	cmd = compiler + ' ' + sourcefilename
 	p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
 	stdout, stderr = p.communicate()
 	if stderr:
@@ -107,13 +97,13 @@ def get_lines(filename):
 ###############################################
 def process_code(commented_line, source, line_number, processor):
 	
-	tempfilename = 'tempfile' + source_filename_extension
+	tempfilename = 'tempfile' + processor.extension
 	f = open(tempfilename, 'w')
 	for l in source:
 		f.write(l + '\n')
 	f.close()
 
-	cmd = compiler + ' ' + tempfilename
+	cmd = processor.compiler + ' ' + tempfilename
 
 	p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
 	stdout, stderr = p.communicate()
@@ -128,7 +118,15 @@ def process_code(commented_line, source, line_number, processor):
 ###############################################
 ###############################################
 ###############################################
-class latex_processor():
+
+class processor():
+
+	def __init__(self, compiler, language, extension):
+		self.compiler = compiler
+		self.language = language
+		self.extension = extension
+
+class latex_processor(processor):
 
 	special_chars = ['#', '%', '{', '}']
 
@@ -146,11 +144,11 @@ class latex_processor():
 		self.latex_command('large', 'Original Source')
 		self.latex_command('end', 'center')
 		self.latex_command('lstset', 'numbers=left')
-		self.latex_command('lstinputlisting[language=%s]' % lang, source_filename)
+		self.latex_command('lstinputlisting[language=%s]' % self.language, source_filename)
 		print('\\newpage')	
 
 	###############################################
-	def header(self, ):
+	def header(self,):
 		res = '''
 \\documentclass{article}
 
@@ -165,7 +163,7 @@ class latex_processor():
 \\tableofcontents
 \\newpage
 '''
-		print(res % compiler)
+		print(res % self.compiler)
 
 	###############################################
 	def footer(self, ):
@@ -192,9 +190,10 @@ class latex_processor():
 ###############################################
 ###############################################
 
-class plaintext_processor():
+class plaintext_processor(processor):
 
 	###############################################
+
 	def include_file(self, source_lines, source_filename):
 		print('Original Source:')
 		for l in source_lines:
@@ -202,9 +201,9 @@ class plaintext_processor():
 		print('\n')	
 
 	###############################################
-	def header(self, ):
+	def header(self):
 		res = 'Iterative Line Removal: Compiler Output Messages using %s\n\n'
-		print(res % compiler)
+		print(res % self.compiler)
 
 	###############################################
 	def footer(self, ):
@@ -213,7 +212,6 @@ class plaintext_processor():
 	###############################################
 	def compile_error(self, text):
 		print(text)
-		
 
 	###############################################
 	def no_problem(self, ):
