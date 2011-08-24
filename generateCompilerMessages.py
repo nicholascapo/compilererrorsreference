@@ -30,7 +30,7 @@ from __future__ import print_function
 from subprocess import Popen, PIPE
 import sys
 import os
-
+import argparse
 
 ###############################################
 ###############################################
@@ -46,32 +46,39 @@ lang = 'C++'
 source_filename_extension = '.cpp'
 
 # whether the output should be in LaTeX or plain text (True / False)
-output_latex = True
+#output_plain = True
 ###############################################
 ###############################################
 
 
 ###############################################
 def main():
-        if len(sys.argv) < 2:
-                usage()
+	options = parse_arguments()
+	output_plain = options['plaintext']
+	
+	source_lines = get_lines(sys.argv[1])
+	
+	check_no_error_compile()
+	
+	if output_plain:
+		processor = plaintext_processor()
 	else:
-		source_lines = get_lines(sys.argv[1])
-		
-		check_no_error_compile()
-		
-		if output_latex:
-			processor = latex_processor()
-		else:
-			processor = plaintext_processor()
-		
-		processor.header()
-		processor.include_file(source_lines, sys.argv[1])
-		for i in range(0, len(source_lines)):
-			if source_lines[i] == '\n': continue
-			process_code(source_lines[i], source_lines[:i] + source_lines[i+1:], i, processor)
+		processor = latex_processor()
+	
+	processor.header()
+	processor.include_file(source_lines, sys.argv[1])
+	for i in range(0, len(source_lines)):
+		if source_lines[i] == '\n':
+			continue
+		process_code(source_lines[i], source_lines[:i] + source_lines[i+1:], i, processor)
 
-		processor.footer()
+	processor.footer()
+
+###############################################
+def parse_arguments():
+	parser = argparse.ArgumentParser(description='Generate Compiler Error Messages, in plaintext or LaTeX')
+	parser.add_argument('-p', '--plain', help='Output plaintext (LaTeX is the default)', action='store_true', default=false, dest=plaintext)
+	
 
 ###############################################
 def check_no_error_compile():
@@ -117,10 +124,6 @@ def process_code(commented_line, source, line_number, processor):
 		processor.compile_error(stderr)
 	else:
 		processor.no_problem()
-
-###############################################
-def usage():
-        print('Usage: generateCompilerMessages.py source.cpp', file=sys.stderr)
 
 ###############################################
 ###############################################
